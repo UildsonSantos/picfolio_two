@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { getToken } from '../authService';
+import { getToken } from '../../authService';
 
+import './styles.css';
 
 const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState(""); // Estado para o termo de busca

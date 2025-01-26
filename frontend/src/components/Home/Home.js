@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import Login from './Login';
-import { getToken, removeToken } from '../authService'; // Importando funções de autenticação
-import Dashboard from './Dashboard/Dashboard'; // Importando o Dashboard
+import Login from '../Login/Login';
+import { getToken, removeToken } from '../../authService'; 
+import Dashboard from '../Dashboard/Dashboard'; 
+
+import './styles.css'; // Importando o arquivo CSS
 
 const Home = () => {
     const [showLogin, setShowLogin] = useState(false);
@@ -27,7 +29,7 @@ const Home = () => {
 
     return (
         <div>
-            <nav>
+            <nav className="navbar">
                 <h1>PicFólio</h1>
                 {isLoggedIn ? (
                     <button onClick={handleLogout}>Logout</button>

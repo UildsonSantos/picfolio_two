@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import api from '../axiosConfig';
-import { saveToken } from '../authService';
+import api from '../../axiosConfig';
+import { saveToken } from '../../authService';
+
+import './styles.css'; // Importando o arquivo CSS
 
 const Login = ({ onClose, onLoginSuccess }) => {
     const [email, setEmail] = useState('');
@@ -23,7 +25,8 @@ const Login = ({ onClose, onLoginSuccess }) => {
     };
 
     return (
-        <div>
+        <div className="login-container">
+            <h2>Login</h2>
             <form onSubmit={handleLogin}>
                 <input
                     type="email"
@@ -39,7 +42,7 @@ const Login = ({ onClose, onLoginSuccess }) => {
                 />
                 <button type="submit">Login</button>
             </form>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p className="error-message">{error}</p>}
             <button onClick={onClose}>Fechar</button> {/* Botão para fechar o Login */}
         </div>
     );

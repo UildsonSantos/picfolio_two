@@ -1,0 +1,30 @@
+/* Navbar.css */
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #007bff; /* Cor de fundo da barra de navegação */
+  padding: 10px 20px; /* Espaçamento interno */
+  color: white; /* Cor do texto */
+}
+
+.navbar h1 {
+  margin: 0; /* Remove a margem do título */
+  font-size: 24px; /* Tamanho da fonte do título */
+}
+
+.navbar button {
+  background-color: transparent; /* Fundo transparente para o botão */
+  color: white; /* Cor do texto do botão */
+  border: 2px solid white; /* Borda branca */
+  border-radius: 4px; /* Bordas arredondadas */
+  padding: 5px 10px; /* Espaçamento interno do botão */
+  cursor: pointer; /* Cursor de ponteiro ao passar o mouse */
+  transition: background-color 0.3s, color 0.3s; /* Transição suave */
+}
+
+.navbar button:hover {
+  background-color: white; /* Fundo branco ao passar o mouse */
+  color: #007bff; /* Cor do texto ao passar o mouse */
+}
