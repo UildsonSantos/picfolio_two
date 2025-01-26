@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import api from '../axiosConfig';
 import { saveToken } from '../authService';
-import { useNavigate } from 'react-router-dom';
 
-const Login = ({ onClose }) => {
+const Login = ({ onClose, onLoginSuccess }) => {
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -18,7 +16,7 @@ const Login = ({ onClose }) => {
         try {
             const response = await api.post('/api/auth/login', { email, senha });
             saveToken(response.data.token); // Salvar token no localStorage
-            navigate('/dashboard'); // Redirecionar para o dashboard
+            onLoginSuccess(); // Chama a função para atualizar o estado de login
         } catch (err) {
             setError('Credenciais inválidas. Tente novamente.');
         }
