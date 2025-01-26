@@ -51,4 +51,23 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
+// @route   GET /images
+// @desc    Buscar imagens por título (case insensitive)
+// @access  Private
+router.get('/', authMiddleware, async (req, res) => {
+    try {
+        const { title } = req.query;
+
+        if (!title) {
+            return res.status(400).json({ error: 'O parâmetro de busca "title" é obrigatório.' });
+        }
+
+        const images = await Image.find({ title: { $regex: title, $options: 'i' } }); // Busca por título contendo o termo
+        res.status(200).json({ results: images });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Erro ao buscar imagens.' });
+    }
+});
+
 module.exports = router;
