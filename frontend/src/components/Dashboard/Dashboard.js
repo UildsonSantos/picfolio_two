@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import axios from "axios";
 import { getToken } from '../../authService';
+import { AuthContext } from "../../context/AuthContext";
 
 import './styles.css';
 
 const Dashboard = () => {
+  const { user, logout } = useContext(AuthContext);
   const [searchTerm, setSearchTerm] = useState(""); // Estado para o termo de busca
   const [images, setImages] = useState([]); // Estado para os resultados de busca
   const [loading, setLoading] = useState(false); // Estado para o carregamento
@@ -28,7 +30,7 @@ const Dashboard = () => {
         },
       });
 
-      setImages(data); // Atualizar as imagens com os resultados
+      setImages(data);
     } catch (err) {
       console.error("Erro ao buscar imagens:", err.response?.data?.message || err.message);
       setImages([]); // Limpar as imagens em caso de erro
@@ -44,7 +46,7 @@ const Dashboard = () => {
 
     setInsertLoading(true);
     try {
-      const token = localStorage.getItem("token"); // Obter o token JWT do localStorage
+      const token = getToken();
       const { data } = await axios.post(
         `http://localhost:5000/api/images`,
         { url: imageUrl, description: imageDescription, title: imageTitle },
@@ -62,8 +64,10 @@ const Dashboard = () => {
   };
 
   return (
+
     <div className="dashboard">
       <h1 className="title">Dashboard</h1>
+      <p>Bem-vindo, {user ? user.nome : "Visitante"}!</p>
 
       {/* Formulário de busca */}
       <form onSubmit={handleSearch} className="search-form">

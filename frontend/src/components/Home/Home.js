@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 import Login from '../Login/Login';
-import { getToken, removeToken } from '../../authService'; 
-import Dashboard from '../Dashboard/Dashboard'; 
+import Dashboard from '../Dashboard/Dashboard';
 
 import './styles.css'; // Importando o arquivo CSS
 
 const Home = () => {
     const [showLogin, setShowLogin] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(!!getToken()); // Verifica se o usuário está logado
+    const { user, logout } = useContext(AuthContext);
 
     const handleLoginClick = () => {
         setShowLogin(true);
@@ -18,31 +18,32 @@ const Home = () => {
     };
 
     const handleLogout = () => {
-        removeToken(); // Remove o token do localStorage
-        setIsLoggedIn(false); // Atualiza o estado de login
+        logout();
     };
 
-    const handleLoginSuccess = () => {
-        setIsLoggedIn(true); // Atualiza o estado de login
-        setShowLogin(false); // Fecha o formulário de login
-    };
 
     return (
         <div>
             <nav className="navbar">
                 <h1>PicFólio</h1>
-                {isLoggedIn ? (
-                    <button onClick={handleLogout}>Logout</button>
+                {user ? ( // Verifica se o usuário está logado
+                    <>
+                        <span>Bem-vindo, {user.nome}!</span> {/* Exibe o nome do usuário */}
+                        <button onClick={handleLogout}>Logout</button>
+                    </>
                 ) : (
+                    <>
+                    <span>Bem-vindo, Visitante!</span>
                     <button onClick={handleLoginClick}>Login</button>
+                    </>
                 )}
             </nav>
-            {showLogin && <Login onClose={handleCloseLogin} onLoginSuccess={handleLoginSuccess} />}
-            {isLoggedIn ? (
-                <Dashboard /> // Exibe o Dashboard se o usuário estiver logado
+            {showLogin && <Login onClose={handleCloseLogin} />}
+            {user ? ( // Exibe o Dashboard se o usuário estiver logado
+                <Dashboard />
             ) : (
                 <div>
-                    <h2>Bem-vindo à página inicial!</h2>
+                    <h2>Bem-vindo Visitante à página inicial!</h2>
                     <p>Conteúdo da página inicial aqui.</p>
                 </div>
             )}

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import api from '../../axiosConfig';
 import { saveToken } from '../../authService';
+import { AuthContext } from '../../context/AuthContext';
 
 import './styles.css'; // Importando o arquivo CSS
 
-const Login = ({ onClose, onLoginSuccess }) => {
+const Login = ({ onClose }) => {
+    const { login } = useContext(AuthContext);
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [error, setError] = useState('');
@@ -18,7 +20,10 @@ const Login = ({ onClose, onLoginSuccess }) => {
         try {
             const response = await api.post('/api/auth/login', { email, senha });
             saveToken(response.data.token); // Salvar token no localStorage
-            onLoginSuccess(); // Chama a função para atualizar o estado de login
+            const userData = { nome: response.data.nome, email };
+            login(userData); // Chama a função de login do contexto
+
+            onClose(); // Fecha o formulário de login
         } catch (err) {
             setError('Credenciais inválidas. Tente novamente.');
         }
