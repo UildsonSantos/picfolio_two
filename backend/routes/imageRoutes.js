@@ -40,33 +40,23 @@ router.post(
 );
 
 // @route   GET /images
-// @desc    Buscar todas as imagens
+// @desc    Buscar imagens do usuário, com ou sem filtro por título
 // @access  Private
 router.get('/', authMiddleware, async (req, res) => {
+    const { title } = req.query;
+
     try {
-        const images = await Image.find({ user: req.user.id });
+        const filter = { user: req.user.id };
+
+        // Se o parâmetro "title" existir, adiciona o filtro de busca por título
+        if (title) {
+            filter.title = { $regex: title, $options: 'i' };
+        }
+
+        const images = await Image.find(filter);
         res.json(images);
     } catch (err) {
         res.status(500).json({ message: 'Erro ao buscar imagens', error: err.message });
-    }
-});
-
-// @route   GET /images
-// @desc    Buscar imagens por título (case insensitive)
-// @access  Private
-router.get('/', authMiddleware, async (req, res) => {
-    try {
-        const { title } = req.query;
-
-        if (!title) {
-            return res.status(400).json({ error: 'O parâmetro de busca "title" é obrigatório.' });
-        }
-
-        const images = await Image.find({ title: { $regex: title, $options: 'i' } }); // Busca por título contendo o termo
-        res.status(200).json({ results: images });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Erro ao buscar imagens.' });
     }
 });
 
