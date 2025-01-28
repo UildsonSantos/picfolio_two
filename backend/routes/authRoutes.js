@@ -1,13 +1,21 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const { check, validationResult } = require('express-validator');
 
 const router = express.Router();
 
-// Rota para login
+// Limitar tentativas de login (5 tentativas por 15 minutos)
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5, // 5 tentativas
+    message: 'Muitas tentativas de login. Tente novamente mais tarde.',
+});
+
 router.post('/login',
+    loginLimiter, // Aplica o limite de tentativas
     [
         check('email', 'Por favor, insira um e-mail válido').isEmail().normalizeEmail(),
         check('senha', 'A senha é obrigatória').notEmpty().trim().escape(),
@@ -20,19 +28,16 @@ router.post('/login',
         const { email, senha } = req.body;
 
         try {
-            // Verificar se o usuário existe
             const usuario = await User.findOne({ email });
             if (!usuario) {
                 return res.status(404).json({ mensagem: 'Usuário não encontrado!' });
             }
 
-            // Verificar a senha
             const senhaValida = await bcrypt.compare(senha, usuario.senha);
             if (!senhaValida) {
                 return res.status(401).json({ mensagem: 'Credenciais inválidas!' });
             }
 
-            // Gerar o token JWT
             const token = jwt.sign(
                 { id: usuario._id, email: usuario.email },
                 process.env.JWT_SECRET,
