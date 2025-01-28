@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema({
             message: 'A senha deve conter pelo menos 8 caracteres, incluindo maiúsculas, minúsculas e números.',
         },
     },
+    refreshToken: { type: String }, // Campo para armazenar o refresh token
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
