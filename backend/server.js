@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const compression = require('compression');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const https = require('https');
+const fs = require('fs');
 const authRoutes = require('./routes/authRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 
@@ -36,6 +38,16 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Erro interno no servidor' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
+// Carregar certificado e chave
+const privateKeyPath = process.env.PRIVATE_KEY_PATH;
+const certificatePath = process.env.CERTIFICATE_PATH;
+
+const options = {
+    key: fs.readFileSync(privateKeyPath),
+    cert: fs.readFileSync(certificatePath),
+};
+
+// Iniciar servidor HTTPS
+https.createServer(options, app).listen(PORT, () => {
+    console.log(`Servidor HTTPS rodando em https://localhost:${PORT}`);
 });

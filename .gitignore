@@ -8,3 +8,6 @@
 
 # environment files
 .env
+
+# Ignora o diretório self-signed certificate, que contém arquivos de chave privada e certificado SSL/TLS autoassinado para HTTPS 
+/self-signed_certificate
