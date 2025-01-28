@@ -6,6 +6,8 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const https = require('https');
 const fs = require('fs');
+const xss = require('xss-clean');
+const mongoSanitize = require('express-mongo-sanitize');
 const authRoutes = require('./routes/authRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 
@@ -22,6 +24,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(compression()); // Compressão de respostas
 app.use(morgan('combined')); // Logs de requisições
+
+// Sanitização de entradas
+app.use(xss()); // Previne XSS
+app.use(mongoSanitize()); // Previne NoSQL injection
 
 // Rotas
 app.use('/api/auth', authRoutes);
