@@ -1,9 +1,11 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Image = require('../models/Image');
-const authMiddleware = require('../middleware/authMiddleware');
+const { authMiddleware } = require('../middleware/authMiddleware');
+const NodeCache = require('node-cache');
 
 const router = express.Router();
+const cache = new NodeCache({ stdTTL: 60 }); // Cache com tempo de vida de 60 segundos
 
 // @route   POST /images
 // @desc    Adicionar uma nova imagem
@@ -32,6 +34,7 @@ router.post(
             });
 
             const savedImage = await newImage.save();
+            cache.flushAll(); // Limpa o cache após uma nova inserção
             res.status(201).json(savedImage);
         } catch (err) {
             res.status(500).json({ message: 'Erro ao salvar a imagem', error: err.message });
@@ -43,17 +46,27 @@ router.post(
 // @desc    Buscar imagens do usuário, com ou sem filtro por título
 // @access  Private
 router.get('/', authMiddleware, async (req, res) => {
-    const { title } = req.query;
+    const { title, page = 1, limit = 10 } = req.query;
+    const cacheKey = `images_${req.user.id}_${title}_${page}_${limit}`;
+
+    // Verifica se há cache para a requisição
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+        return res.json(cachedData);
+    }
 
     try {
         const filter = { user: req.user.id };
 
-        // Se o parâmetro "title" existir, adiciona o filtro de busca por título
         if (title) {
             filter.title = { $regex: title, $options: 'i' };
         }
 
-        const images = await Image.find(filter);
+        const images = await Image.find(filter)
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        cache.set(cacheKey, images); // Armazena no cache
         res.json(images);
     } catch (err) {
         res.status(500).json({ message: 'Erro ao buscar imagens', error: err.message });
