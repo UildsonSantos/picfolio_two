@@ -1,10 +1,16 @@
 const jwt = require('jsonwebtoken');
+const revokedTokens = new Set(); // Lista negra de tokens revogados
 
 const authMiddleware = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
         return res.status(401).json({ message: 'Acesso negado. Token não fornecido.' });
+    }
+
+    // Verificar se o token foi revogado
+    if (revokedTokens.has(token)) {
+        return res.status(403).json({ message: 'Token revogado.' });
     }
 
     try {
@@ -16,4 +22,9 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-module.exports = authMiddleware;
+// Função para revogar tokens (usada no logout)
+const revokeToken = (token) => {
+    revokedTokens.add(token);
+};
+
+module.exports = { authMiddleware, revokeToken };
