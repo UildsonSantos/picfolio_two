@@ -1,12 +1,13 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import axios from "axios";
-import { getToken } from '../../authService';
+import DOMPurify from 'dompurify';
+import { getAccessToken } from '../../authService';
 import { AuthContext } from "../../context/AuthContext";
 
 import './styles.css';
 
 const Dashboard = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [searchTerm, setSearchTerm] = useState(""); // Estado para o termo de busca
   const [images, setImages] = useState([]); // Estado para os resultados de busca
   const [loading, setLoading] = useState(false); // Estado para o carregamento
@@ -14,55 +15,111 @@ const Dashboard = () => {
   const [imageUrl, setImageUrl] = useState(""); // Estado para URL da imagem
   const [imageDescription, setImageDescription] = useState(""); // Estado para descrição
   const [insertLoading, setInsertLoading] = useState(false); // Estado para carregamento de inserção
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState('');
+  const [errorInsert, setErrorInsert] = useState('');
 
+  const handleSearch = useCallback(async (e) => {
+    if (e) {
+      e.preventDefault(); // Evitar reload da página
+    }
 
-  const handleSearch = async (e) => {
-    e.preventDefault(); // Evitar reload da página
-    if (!searchTerm.trim()) return; // Verificar se o campo está vazio
+    // Sanitizar o termo de busca
+    const sanitizedSearchTerm = DOMPurify.sanitize(searchTerm);
 
+    if (!sanitizedSearchTerm.trim()) { // Verificar se o campo está vazio 
+      setError('Por favor, insira um termo de busca.'); // Define a mensagem de erro
+      setLoading(false); // Esconde o indicador de carregamento
+      setImages([]); // Limpa as imagens
+      return; // Interrompe a pesquisa se o termo estiver vazio
+    }
+
+    setError(''); // Limpa qualquer mensagem de erro anterior
     setLoading(true);
+
     try {
-      const token = getToken(); // Obter o token do localStorage
-      const { data } = await axios.get(`http://localhost:5000/api/images`, {
-        params: { title: searchTerm }, // Passar o termo de busca como parâmetro
+      const token = getAccessToken(); // Obter o token do localStorage
+      const { data } = await axios.get(`https://localhost:5000/api/images`, {
+        params: { title: sanitizedSearchTerm, page: currentPage, limit: 10 }, // Passar o termo de busca como parâmetro
         headers: {
           Authorization: `Bearer ${token}`, // Adicionar o token ao cabeçalho
         },
       });
 
-      setImages(data);
+      setTotalPages(data.totalPages);
+      setImages(data.images);
     } catch (err) {
       console.error("Erro ao buscar imagens:", err.response?.data?.message || err.message);
       setImages([]); // Limpar as imagens em caso de erro
+      setError("Erro ao buscar imagens. Tente novamente mais tarde."); // Define a mensagem de erro
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, currentPage]); // Dependências de handleSearch
+
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      handleSearch(); // Chama a função memorizada se searchTerm não estiver vazio na montagem
+    } else {
+      setImages([]);
+      setTotalPages(1);
+      setError(''); // Limpa o erro se o campo estiver vazio 
+    }
+  }, [handleSearch, searchTerm]);
+
+  // Adicionando um useEffect para chamar handleSearch quando currentPage mudar
+  useEffect(() => {
+    handleSearch();
+  }, [handleSearch, currentPage]); // Chama a busca sempre que a página atual mudar
+
 
   // Função de inserção
   const handleInsert = async (e) => {
-    e.preventDefault();
-    if (!imageUrl.trim() || !imageDescription.trim()) return;
+    if (e) {
+      e.preventDefault(); // Evitar reload da página
+    }
+    setErrorInsert(''); // Limpa o erro *antes* da inserção
+    // Sanitizar as entradas
+    const sanitizedTitle = DOMPurify.sanitize(imageTitle);
+    const sanitizedUrl = DOMPurify.sanitize(imageUrl);
+    const sanitizedDescription = DOMPurify.sanitize(imageDescription);
+
+    if (!sanitizedUrl.trim() || !sanitizedDescription.trim() || !sanitizedTitle.trim()) {
+      setErrorInsert("Por favor, preencha todos os campos.");
+      return;
+    }
+
 
     setInsertLoading(true);
     try {
-      const token = getToken();
+      const token = getAccessToken();
       const { data } = await axios.post(
-        `http://localhost:5000/api/images`,
-        { url: imageUrl, description: imageDescription, title: imageTitle },
+        `https://localhost:5000/api/images`,
+        { url: sanitizedUrl, description: sanitizedDescription, title: sanitizedTitle },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert(data.message || "Imagem inserida com sucesso!");
+
       setImageUrl("");
       setImageDescription("");
+      setImageTitle("");
     } catch (err) {
       console.error("Erro ao inserir imagem:", err.response?.data?.message || err.message);
-      alert(err.response?.data?.message || "Erro ao inserir imagem.");
+      setErrorInsert(err.response?.data?.message || "Erro ao inserir imagem. Verifique todos os dados e use uma URL válida"); // Define a mensagem de erro
     } finally {
       setInsertLoading(false);
+
     }
   };
 
+  // Limpa os erros no carregamento inicial (ou em cada renderização se necessário)
+  useEffect(() => {
+    setError('');
+    setErrorInsert('');
+  }, []); // Array de dependências vazio para executar apenas uma vez na montagem
+
+  
   return (
 
     <div className="dashboard">
@@ -73,6 +130,8 @@ const Dashboard = () => {
       <form onSubmit={handleSearch} className="search-form">
         <input
           type="text"
+          id="search"
+          name="search"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar imagens..."
@@ -85,26 +144,41 @@ const Dashboard = () => {
           {loading ? "Buscando..." : "Buscar"}
         </button>
       </form>
-
+      {error && <p className="error-message">{error}</p>}
       {/* Resultados da busca */}
       <div className="image-grid">
-        {images.length > 0 ? (
+        {loading ? (
+          <p>Carregando imagens...</p> // Mensagem de carregamento
+        ) : images.length > 0 ? (
           images.map((img, index) => (
             <div key={index} className="image-card">
               <img src={img.url} alt={img.description} className="image" />
-              <p className="image-description">{img.description}</p>
+              <p className="image-title">{img.title}</p>
             </div>
           ))
         ) : (
-          <p>Nenhuma imagem encontrada.</p> // Mensagem quando não há imagens
+          <p>Busque suas imagens..</p> // Mensagem quando não há imagens
         )}
       </div>
+
+      <div className="pagination">
+        <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+          Anterior
+        </button>
+        <span> Página {currentPage} de {totalPages}</span>
+        <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+          Próxima
+        </button>
+      </div>
+
 
       {/* Formulário de inserção */}
       <form onSubmit={handleInsert} className="form-container">
         <h2 className="form-title">Inserir nova imagem</h2>
         <input
           type="text"
+          id="imageTitle"
+          name="imageTitle"
           value={imageTitle}
           onChange={(e) => setImageTitle(e.target.value)} // Atualizar o estado do título
           placeholder="Título da imagem"
@@ -112,12 +186,16 @@ const Dashboard = () => {
         />
         <input
           type="text"
+          id="imageUrl"
+          name="imageUrl"
           value={imageUrl}
           onChange={(e) => setImageUrl(e.target.value)}
           placeholder="URL da imagem"
           className="form-input"
         />
         <textarea
+          id="imageDescription"
+          name="imageDescription"
           value={imageDescription}
           onChange={(e) => setImageDescription(e.target.value)}
           placeholder="Descrição da imagem"
@@ -130,6 +208,8 @@ const Dashboard = () => {
           {insertLoading ? "Inserindo..." : "Inserir"}
         </button>
       </form>
+
+      {errorInsert && <p className="error-message">{errorInsert}</p>}
     </div>
   );
 };

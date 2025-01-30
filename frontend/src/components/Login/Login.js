@@ -1,9 +1,9 @@
 import React, { useState, useContext, useRef, useEffect, useCallback } from 'react';
 import api from '../../axiosConfig';
-import { saveToken } from '../../authService';
+import { saveTokens } from '../../authService';
 import { AuthContext } from '../../context/AuthContext';
 
-import './styles.css'; 
+import './styles.css';
 
 const Login = ({ onClose }) => {
     const { login } = useContext(AuthContext);
@@ -20,8 +20,9 @@ const Login = ({ onClose }) => {
         }
         try {
             const response = await api.post('/api/auth/login', { email, senha });
-            saveToken(response.data.token); // Salvar token no localStorage
-            const userData = { nome: response.data.nome, email };
+            const { accessToken, refreshToken, nome } = response.data; // Pegue os dois tokens
+            saveTokens(accessToken, refreshToken); // Salvar ambos os tokens no localStorage
+            const userData = { nome, email };
             login(userData); // Chama a função de login do contexto
 
             onClose(); // Fecha o formulário de login
@@ -52,13 +53,18 @@ const Login = ({ onClose }) => {
                 <h2>Login</h2>
                 <form onSubmit={handleLogin}>
                     <input
+                        autoComplete='on'
                         type="email"
+                        id='email'
+                        name='email'
                         placeholder="E-mail"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
                     <input
                         type="password"
+                        id='password'
+                        name='password'
                         placeholder="Senha"
                         value={senha}
                         onChange={(e) => setSenha(e.target.value)}

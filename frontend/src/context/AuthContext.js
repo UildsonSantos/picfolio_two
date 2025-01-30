@@ -1,4 +1,6 @@
 import { createContext, useState, useEffect } from "react";
+import api from "../axiosConfig";
+import { getRefreshToken, removeTokens } from "../authService";
 
 export const AuthContext = createContext();
 
@@ -18,9 +20,19 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("user", JSON.stringify(userData));
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem("user");
+    const logout = async () => {
+        try {
+            const refreshToken = getRefreshToken();
+            if (refreshToken) {
+                await api.post('/api/auth/logout', { refreshToken });
+            }
+        } catch (err) {
+            console.error('Erro ao fazer logout:', err);
+        } finally {
+            setUser(null);
+            localStorage.removeItem("user");
+            removeTokens();
+        }
     };
 
     return (

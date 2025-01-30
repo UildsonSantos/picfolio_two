@@ -54,11 +54,25 @@
   object-fit: cover;
 }
 
-.image-description {
+.image-title {
   padding: 8px;
   font-size: 14px;
 }
 
+.error-message {
+  color: red; /* Cor da mensagem de erro */
+  margin-top: 10px; /* Margem superior para a mensagem de erro */
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin: 10px;
+}
+
+.pagination span {
+  padding: 5px;
+}
 /* InsertImageForm.css */
 
 .form-container {
@@ -75,7 +89,7 @@
 }
 
 .form-input {
-  width: 100%; /* Largura total */
+  width: 99%; /* Largura total */
   padding: 8px; /* Espaçamento interno */
   border: 1px solid #d1d5db; /* Borda cinza */
   border-radius: 4px; /* Bordas arredondadas */
@@ -83,7 +97,7 @@
 }
 
 .form-textarea {
-  width: 100%; /* Largura total */
+  width: 99%; /* Largura total */
   padding: 8px; /* Espaçamento interno */
   border: 1px solid #d1d5db; /* Borda cinza */
   border-radius: 4px; /* Bordas arredondadas */

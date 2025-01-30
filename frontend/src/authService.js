@@ -1,19 +1,48 @@
-// Salvar o token no localStorage
-export const saveToken = (token) => {
-    localStorage.setItem('token', token);
+import api from './axiosConfig';
+
+
+// Salvar tokens no localStorage
+export const saveTokens = (accessToken, refreshToken) => {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
 };
 
-// Buscar o token do localStorage
-export const getToken = () => {
-    return localStorage.getItem('token');
+// Buscar access token do localStorage
+export const getAccessToken = () => {
+    return localStorage.getItem('accessToken');
 };
 
-// Remover o token do localStorage
-export const removeToken = () => {
-    localStorage.removeItem('token');
+// Buscar refresh token do localStorage
+export const getRefreshToken = () => {
+    return localStorage.getItem('refreshToken');
+};
+
+// Remover tokens do localStorage
+export const removeTokens = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
 };
 
 // Verificar se o usuário está autenticado
 export const isAuthenticated = () => {
-    return !!getToken();
+    return !!getAccessToken();
+};
+
+// Renovar access token usando refresh token
+export const refreshAccessToken = async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+        throw new Error('Refresh token não encontrado.');
+    }
+
+    try {
+        const response = await api.post('/api/auth/refresh-token', { refreshToken });
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        saveTokens(accessToken, newRefreshToken); // Salvar novo access token
+        return accessToken
+    } catch (error) {
+        console.error("Error refreshing token:", error);
+        removeTokens(); // Remover tokens em caso de erro
+        throw error;
+    }
 };

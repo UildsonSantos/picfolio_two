@@ -62,12 +62,24 @@ router.get('/', authMiddleware, async (req, res) => {
             filter.title = { $regex: title, $options: 'i' };
         }
 
+        // Contar o total de imagens que correspondem ao filtro
+        const totalImages = await Image.countDocuments(filter);
         const images = await Image.find(filter)
             .skip((page - 1) * limit)
             .limit(limit);
 
-        cache.set(cacheKey, images); // Armazena no cache
-        res.json(images);
+        // Calcular o total de páginas
+        const totalPages = Math.ceil(totalImages / limit);
+
+        // Armazenar no cache
+        const response = {
+            totalImages,
+            totalPages,
+            currentPage: page,
+            images,
+        };
+        cache.set(cacheKey, response); // Armazena no cache
+        res.json(response);
     } catch (err) {
         res.status(500).json({ message: 'Erro ao buscar imagens', error: err.message });
     }
