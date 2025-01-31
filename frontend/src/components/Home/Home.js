@@ -7,8 +7,8 @@ import './styles.css'; // Importando o arquivo CSS
 
 const Home = () => {
     const [showLogin, setShowLogin] = useState(false);
+    const [showHome, setShowHome] = useState(true);
     const { user, logout } = useContext(AuthContext);
-
     const handleLoginClick = () => {
         setShowLogin(true);
     };
@@ -19,33 +19,55 @@ const Home = () => {
 
     const handleLogout = () => {
         logout();
+        setShowHome(true); // Redireciona para a Home após o logout
+    };
+
+    const handleHomeClick = () => {
+        setShowHome(true);
+    };
+
+    const handleDashboardClick = () => {
+        setShowHome(false);
     };
 
 
     return (
         <div>
             <nav className="navbar">
-                <h1>PicFólio</h1>
+                <div>
+                    <h1 className="navbar-brand">PicFólio</h1>
+                    <button className={showHome ? "active" : ""} onClick={handleHomeClick}>
+                        Home
+                    </button>
+                    {user && ( // Exibe o botão Dashboard apenas se o usuário estiver logado
+                        <button className={!showHome ? "active" : ""} onClick={handleDashboardClick}>
+                            Dashboard
+                        </button>
+                    )}
+                </div>
                 {user ? ( // Verifica se o usuário está logado
-                    <>
-                        <span>Bem-vindo, {user.nome}!</span> {/* Exibe o nome do usuário */}
+                    <div>
+                        <span>Bem-vindo, {user.nome}</span>
                         <button onClick={handleLogout}>Logout</button>
-                    </>
+                    </div>
+
                 ) : (
-                    <>
-                    <span>Bem-vindo, Visitante!</span>
-                    <button onClick={handleLoginClick}>Login</button>
-                    </>
+                    <div>
+                        <span>Bem-vindo, Visitante</span>
+                        <button onClick={handleLoginClick}>Login</button>
+                    </div>
                 )}
             </nav>
-            {showLogin && <Login onClose={handleCloseLogin} />}
-            {user ? ( // Exibe o Dashboard se o usuário estiver logado
-                <Dashboard />
-            ) : (
+            {showLogin && <Login onClose={handleCloseLogin} onLoginSuccess={() => {
+                setShowHome(false);
+            }} />}
+            {showHome ? (
                 <div>
-                    <h2>Bem-vindo Visitante à página inicial!</h2>
+                    <h2>Bem-vindo Visitante à página inicial</h2>
                     <p>Conteúdo da página inicial aqui.</p>
                 </div>
+            ) : (
+                <Dashboard />
             )}
         </div>
     );

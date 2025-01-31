@@ -2,14 +2,17 @@ import React, { useState, useContext, useRef, useEffect, useCallback } from 'rea
 import api from '../../axiosConfig';
 import { saveTokens } from '../../authService';
 import { AuthContext } from '../../context/AuthContext';
+import olhoAberto from '../../assets/images/olho_aberto.png';
+import olhoFechado from '../../assets/images/olho_fechado.png';
 
 import './styles.css';
 
-const Login = ({ onClose }) => {
+const Login = ({ onClose, onLoginSuccess  }) => {
     const { login } = useContext(AuthContext);
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false); // Estado para controlar a visibilidade da senha
     const modalRef = useRef(); // Ref para o modal
 
     const handleLogin = async (e) => {
@@ -26,6 +29,7 @@ const Login = ({ onClose }) => {
             login(userData); // Chama a função de login do contexto
 
             onClose(); // Fecha o formulário de login
+            onLoginSuccess();
         } catch (err) {
             setError('Credenciais inválidas. Tente novamente.');
         }
@@ -46,6 +50,10 @@ const Login = ({ onClose }) => {
         };
     }, [handleClickOutside]);
 
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     return (
         <div className="login-container">
             <div className="modal-content" ref={modalRef}>
@@ -61,14 +69,23 @@ const Login = ({ onClose }) => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
-                    <input
-                        type="password"
-                        id='password'
-                        name='password'
-                        placeholder="Senha"
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                    />
+                    <div className="password-input-container">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            id='password'
+                            name='password'
+                            placeholder="Senha"
+                            value={senha}
+                            onChange={(e) => setSenha(e.target.value)}
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle-button"
+                            onClick={togglePasswordVisibility}
+                        >
+                            <img src={showPassword ? olhoFechado : olhoAberto} alt="Mostrar/Ocultar Senha" />
+                        </button>
+                    </div>
                     <button type="submit">Login</button>
                 </form>
                 {error && <p className="error-message">{error}</p>}
