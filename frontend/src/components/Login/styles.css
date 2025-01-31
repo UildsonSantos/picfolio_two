@@ -11,6 +11,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
   max-width: fit-content;
   max-height: fit-content;
+  z-index: 1000;
 }
 
 .login-container h2 {

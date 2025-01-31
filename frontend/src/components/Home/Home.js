@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import Login from '../Login/Login';
 import Dashboard from '../Dashboard/Dashboard';
+import HomeContent from '../HomeContent/HomeContent';
 
 import './styles.css'; // Importando o arquivo CSS
 
@@ -63,8 +64,12 @@ const Home = () => {
             }} />}
             {showHome ? (
                 <div>
-                    <h2>Bem-vindo Visitante à página inicial</h2>
-                    <p>Conteúdo da página inicial aqui.</p>
+                    {user ? (
+                        <h2>Bem-vindo, {user.nome} ao seu PicFólio</h2>
+                    ) : (
+                        <h2>Bem-vindo Visitante ao PicFólio</h2>
+                    )}
+                    <HomeContent />
                 </div>
             ) : (
                 <Dashboard />
