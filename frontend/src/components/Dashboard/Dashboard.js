@@ -1,13 +1,13 @@
 import React, { useState, useContext, useEffect, useCallback } from "react";
-import axios from "axios";
 import DOMPurify from 'dompurify';
 import { getAccessToken } from '../../authService';
 import { AuthContext } from "../../context/AuthContext";
+import api from "../../axiosConfig";
 
 import './styles.css';
 
 const Dashboard = () => {
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const [searchTerm, setSearchTerm] = useState(""); // Estado para o termo de busca
   const [images, setImages] = useState([]); // Estado para os resultados de busca
   const [loading, setLoading] = useState(false); // Estado para o carregamento
@@ -40,7 +40,7 @@ const Dashboard = () => {
 
     try {
       const token = getAccessToken(); // Obter o token do localStorage
-      const { data } = await axios.get(`https://localhost:5000/api/images`, {
+      const { data } = await api.get(`https://localhost:5000/api/images`, {
         params: { title: sanitizedSearchTerm, page: currentPage, limit: 10 }, // Passar o termo de busca como parâmetro
         headers: {
           Authorization: `Bearer ${token}`, // Adicionar o token ao cabeçalho
@@ -49,14 +49,25 @@ const Dashboard = () => {
 
       setTotalPages(data.totalPages);
       setImages(data.images);
-    } catch (err) {
-      console.error("Erro ao buscar imagens:", err.response?.data?.message || err.message);
-      setImages([]); // Limpar as imagens em caso de erro
-      setError("Erro ao buscar imagens. Tente novamente mais tarde."); // Define a mensagem de erro
+    } catch (error) {
+      if (error.response?.status === 403) {
+        // Token inválido, desloga o usuário
+        logout();
+        window.location.href = '/';
+      } else if (error.logout) {
+        // Sessão expirada, redireciona para o login
+        logout();
+        window.location.href = '/';
+      } else {
+        // Outros erros
+        console.error("Erro ao buscar imagens:", error.response?.data?.message || error.message);
+        setImages([]); // Limpar as imagens em caso de erro
+        setError("Erro ao buscar imagens. Tente novamente mais tarde."); // Define a mensagem de erro
+      }// Define a mensagem de erro
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, currentPage]); // Dependências de handleSearch
+  }, [searchTerm, currentPage, logout]); // Dependências de handleSearch
 
   useEffect(() => {
     if (searchTerm.trim()) {
@@ -94,7 +105,7 @@ const Dashboard = () => {
     setInsertLoading(true);
     try {
       const token = getAccessToken();
-      const { data } = await axios.post(
+      const { data } = await api.post(
         `https://localhost:5000/api/images`,
         { url: sanitizedUrl, description: sanitizedDescription, title: sanitizedTitle },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -104,12 +115,21 @@ const Dashboard = () => {
       setImageUrl("");
       setImageDescription("");
       setImageTitle("");
-    } catch (err) {
-      console.error("Erro ao inserir imagem:", err.response?.data?.message || err.message);
-      setErrorInsert(err.response?.data?.message || "Erro ao inserir imagem. Verifique todos os dados e use uma URL válida"); // Define a mensagem de erro
+    } catch (error) {
+      if (error.response?.status === 403) {
+        // Token inválido, desloga o usuário
+        logout();
+        window.location.href = '/';
+      } else if (error.logout) {
+        // Sessão expirada, redireciona para o login
+        logout();
+        window.location.href = '/';
+      } else {
+        console.error("Erro ao inserir imagem:", error.response?.data?.message || error.message);
+        setErrorInsert(error.response?.data?.message || "Erro ao inserir imagem. Verifique todos os dados e use uma URL válida");
+      }// Define a mensagem de erro
     } finally {
       setInsertLoading(false);
-
     }
   };
 
@@ -119,7 +139,7 @@ const Dashboard = () => {
     setErrorInsert('');
   }, []); // Array de dependências vazio para executar apenas uma vez na montagem
 
-  
+
   return (
 
     <div className="dashboard">

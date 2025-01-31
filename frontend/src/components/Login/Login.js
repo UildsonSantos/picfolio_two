@@ -31,7 +31,12 @@ const Login = ({ onClose, onLoginSuccess  }) => {
             onClose(); // Fecha o formulário de login
             onLoginSuccess();
         } catch (err) {
-            setError('Credenciais inválidas. Tente novamente.');
+            console.log(err);
+            if(err.code === 'ERR_NETWORK'){
+                setError('Há um error de conexão. Tente novamente mais tarde.');
+            } else {
+                setError('Email ou senha inválidos. Tente novamente.');
+            }
         }
     };
 

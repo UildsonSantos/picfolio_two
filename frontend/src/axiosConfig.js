@@ -28,18 +28,49 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true; // Evitar loop de tentativas
-            try {
-                const newAccessToken = await refreshAccessToken();
-                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-                return api(originalRequest); // Repetir a requisição com o novo token
-            } catch (err) {
-                console.error('Erro ao renovar access token:', err);
-                removeTokens(); // Remover tokens em caso de erro
-                window.location.href = '/'; // Redirecionar para a página inicial
+        const status = error.response?.status;
+        const message = error.response?.data?.message; // Obtém a mensagem do erro
+
+        if (status === 401 && message === 'Token expirado.') { // Erro 401 específico para token expirado
+            if (!originalRequest._retry) {
+                originalRequest._retry = true;
+                try {
+                    const newAccessToken = await refreshAccessToken();
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                    return api(originalRequest); // Repete a requisição com o novo token
+                } catch (err) {
+                    console.error('Erro ao renovar access token:', err);
+                    removeTokens();
+                    return Promise.reject({
+                        ...error,
+                        message: 'Sessão expirada. Faça login novamente.',
+                        logout: true,
+                    });
+                }
             }
+        } else if (status === 401 && message === 'Acesso negado. Token não fornecido.') { //erro 401 para token nao fornecido
+          removeTokens();
+          return Promise.reject({
+            ...error,
+            message: 'Sessão expirada. Faça login novamente.',
+            logout: true,
+        });
+        } else if (status === 403 && message === 'Token revogado.') { // Erro 403 específico para token revogado
+            removeTokens();
+            return Promise.reject({
+                ...error,
+                message: 'Token revogado. Faça login novamente.',
+                logout: true,
+            });
+        } else if (status === 403 && message === 'Token inválido.') { // Erro 403 específico para token inválido
+            removeTokens();
+            return Promise.reject({
+                ...error,
+                message: 'Token inválido. Faça login novamente.',
+                logout: true,
+            });
         }
+
         return Promise.reject(error);
     }
 );
