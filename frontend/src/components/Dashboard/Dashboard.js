@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useCallback } from "react";
+import React, { useState, useContext, useEffect, useCallback, useRef } from "react";
 import DOMPurify from 'dompurify';
 import { getAccessToken } from '../../authService';
 import { AuthContext } from "../../context/AuthContext";
@@ -19,6 +19,7 @@ const Dashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState('');
   const [errorInsert, setErrorInsert] = useState('');
+  const searchTermRef = useRef(searchTerm);  // Usar uma ref para armazenar o searchTerm atual
 
   const handleSearch = useCallback(async (e) => {
     if (e) {
@@ -26,7 +27,7 @@ const Dashboard = () => {
     }
 
     // Sanitizar o termo de busca
-    const sanitizedSearchTerm = DOMPurify.sanitize(searchTerm);
+    const sanitizedSearchTerm = DOMPurify.sanitize(searchTermRef.current); // Usar a ref
 
     if (!sanitizedSearchTerm.trim()) { // Verificar se o campo está vazio 
       setError('Por favor, insira um termo de busca.'); // Define a mensagem de erro
@@ -63,27 +64,24 @@ const Dashboard = () => {
         console.error("Erro ao buscar imagens:", error.response?.data?.message || error.message);
         setImages([]); // Limpar as imagens em caso de erro
         setError("Erro ao buscar imagens. Tente novamente mais tarde."); // Define a mensagem de erro
-      }// Define a mensagem de erro
+      }
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, currentPage, logout]); // Dependências de handleSearch
+  }, [currentPage, logout]); // Dependências de handleSearch
 
+  // Atualizar a ref sempre que searchTerm mudar
   useEffect(() => {
-    if (searchTerm.trim()) {
-      handleSearch(); // Chama a função memorizada se searchTerm não estiver vazio na montagem
-    } else {
-      setImages([]);
-      setTotalPages(1);
-      setError(''); // Limpa o erro se o campo estiver vazio 
+    searchTermRef.current = searchTerm;
+  }, [searchTerm]);
+
+
+  
+  useEffect(() => {
+    if (searchTermRef.current.trim()) { // Usar a ref para verificar se há um termo de busca
+      handleSearch(); // Chama a busca sempre que a página atual mudar
     }
-  }, [handleSearch, searchTerm]);
-
-  // Adicionando um useEffect para chamar handleSearch quando currentPage mudar
-  useEffect(() => {
-    handleSearch();
-  }, [handleSearch, currentPage]); // Chama a busca sempre que a página atual mudar
-
+  }, [currentPage, handleSearch]);
 
   // Função de inserção
   const handleInsert = async (e) => {
@@ -100,7 +98,6 @@ const Dashboard = () => {
       setErrorInsert("Por favor, preencha todos os campos.");
       return;
     }
-
 
     setInsertLoading(true);
     try {
@@ -127,7 +124,7 @@ const Dashboard = () => {
       } else {
         console.error("Erro ao inserir imagem:", error.response?.data?.message || error.message);
         setErrorInsert(error.response?.data?.message || "Erro ao inserir imagem. Verifique todos os dados e use uma URL válida");
-      }// Define a mensagem de erro
+      }
     } finally {
       setInsertLoading(false);
     }
@@ -141,7 +138,6 @@ const Dashboard = () => {
 
 
   return (
-
     <div className="dashboard">
       <h1 className="title">Dashboard</h1>
       <p>Bem-vindo, {user ? user.nome : "Visitante"}!</p>
@@ -165,6 +161,7 @@ const Dashboard = () => {
         </button>
       </form>
       {error && <p className="error-message">{error}</p>}
+
       {/* Resultados da busca */}
       <div className="image-grid">
         {loading ? (
@@ -181,6 +178,7 @@ const Dashboard = () => {
         )}
       </div>
 
+      {/* Paginação */}
       <div className="pagination">
         <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
           Anterior
@@ -190,7 +188,6 @@ const Dashboard = () => {
           Próxima
         </button>
       </div>
-
 
       {/* Formulário de inserção */}
       <form onSubmit={handleInsert} className="form-container">
