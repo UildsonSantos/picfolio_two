@@ -119,3 +119,8 @@
 .form-button:hover {
   background-color: #2f855a; /* Cor de fundo verde mais escuro ao passar o mouse */
 }
+
+button:disabled {
+  background-color: #0056b3;
+  cursor: not-allowed;
+}

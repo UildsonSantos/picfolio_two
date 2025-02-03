@@ -7,7 +7,7 @@ import HomeContent from '../HomeContent/HomeContent';
 import './styles.css'; // Importando o arquivo CSS
 
 const Home = () => {
-    const [showLogin, setShowLogin] = useState(false);
+    const [showLogin, setShowLogin] = useState(true);
     const [showHome, setShowHome] = useState(true);
     const { user, logout } = useContext(AuthContext);
     const handleLoginClick = () => {
@@ -48,29 +48,30 @@ const Home = () => {
                 </div>
                 {user ? ( // Verifica se o usuário está logado
                     <div>
-                        <span>Bem-vindo, {user.nome}</span>
+                        <span>Bem-vindo(a), {user.nome}</span>
                         <button onClick={handleLogout}>Logout</button>
                     </div>
 
                 ) : (
                     <div>
-                        <span>Bem-vindo, Visitante</span>
+                        <span>Bem-vindo(a), Visitante</span>
                         <button onClick={handleLoginClick}>Login</button>
                     </div>
                 )}
             </nav>
-            {showLogin && <Login onClose={handleCloseLogin} onLoginSuccess={() => {
+            {showLogin && !user && <Login onClose={handleCloseLogin} onLoginSuccess={() => {
                 setShowHome(false);
             }} />}
             {showHome ? (
-                <div>
+                <>
                     {user ? (
-                        <h2>Bem-vindo, {user.nome} ao seu PicFólio</h2>
+                        <h2>Bem-vindo(a), {user.nome} ao seu PicFólio</h2>
                     ) : (
-                        <h2>Bem-vindo Visitante ao PicFólio</h2>
+                        <h2>Bem-vindo(a) Visitante ao PicFólio</h2>
                     )}
+
                     <HomeContent />
-                </div>
+                </>
             ) : (
                 <Dashboard />
             )}

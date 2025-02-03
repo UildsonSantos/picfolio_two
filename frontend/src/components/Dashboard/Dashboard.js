@@ -76,7 +76,7 @@ const Dashboard = () => {
   }, [searchTerm]);
 
 
-  
+
   useEffect(() => {
     if (searchTermRef.current.trim()) { // Usar a ref para verificar se há um termo de busca
       handleSearch(); // Chama a busca sempre que a página atual mudar
@@ -140,7 +140,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <h1 className="title">Dashboard</h1>
-      <p>Bem-vindo, {user ? user.nome : "Visitante"}!</p>
+      <p>Bem-vindo(a), {user ? user.nome : "Visitante"}!</p>
 
       {/* Formulário de busca */}
       <form onSubmit={handleSearch} className="search-form">
