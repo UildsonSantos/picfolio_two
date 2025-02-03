@@ -20,6 +20,15 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [errorInsert, setErrorInsert] = useState('');
   const searchTermRef = useRef(searchTerm);  // Usar uma ref para armazenar o searchTerm atual
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const handleImageClick = (image) => {
+    setSelectedImage(image);
+  };
+
+  const closeModal = () => {
+    setSelectedImage(null);
+  };
 
   const handleSearch = useCallback(async (e) => {
     if (e) {
@@ -162,15 +171,31 @@ const Dashboard = () => {
       </form>
       {error && <p className="error-message">{error}</p>}
 
+      {/* Mostra imagem selecionada */}
+      {selectedImage && (
+        <div className="modal-image" onClick={closeModal}>
+          <div className="modal-image-content" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={selectedImage.url}
+              alt={selectedImage.title}
+            />
+            <p className="modal-image-description">{selectedImage.description}</p>
+            <button className="modal-image-close-button" onClick={closeModal}>
+              X
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Resultados da busca */}
       <div className="image-grid">
         {loading ? (
           <p>Carregando imagens...</p> // Mensagem de carregamento
         ) : images.length > 0 ? (
           images.map((img, index) => (
-            <div key={index} className="image-card">
+            <div key={index} className="image-card" onClick={() => handleImageClick(img)}>
               <img src={img.url} alt={img.description} className="image" />
-              <p className="image-title">{img.title}</p>
+              <p className="image-title">{img.description}</p>
             </div>
           ))
         ) : (
