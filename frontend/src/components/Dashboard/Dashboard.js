@@ -103,6 +103,13 @@ const Dashboard = () => {
     const sanitizedUrl = DOMPurify.sanitize(imageUrl);
     const sanitizedDescription = DOMPurify.sanitize(imageDescription);
 
+    const regex = /\.(jpg|jpeg|png|gif|bmp|jpg\.webp)$/;
+
+    if (!regex.test(sanitizedUrl)) {
+      setErrorInsert("URL não é uma imagem válida.");
+      return;
+    }
+
     if (!sanitizedUrl.trim() || !sanitizedDescription.trim() || !sanitizedTitle.trim()) {
       setErrorInsert("Por favor, preencha todos os campos.");
       return;
