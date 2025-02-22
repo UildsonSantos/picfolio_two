@@ -1,8 +1,9 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body, validationResult, query } = require('express-validator');
 const Image = require('../models/Image');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const NodeCache = require('node-cache');
+const validator = require('validator');
 
 const router = express.Router();
 const cache = new NodeCache({ stdTTL: 60 }); // Cache com tempo de vida de 60 segundos
@@ -45,9 +46,11 @@ router.post(
 // @route   GET /images
 // @desc    Buscar imagens do usuário, com ou sem filtro por título
 // @access  Private
-router.get('/', authMiddleware, async (req, res) => {
-    const { title, page = 1, limit = 10 } = req.query;
-    const cacheKey = `images_${req.user.id}_${title}_${page}_${limit}`;
+router.get('/', authMiddleware, [
+    query('url').optional().isURL().withMessage('A URL de busca deve ser válida'),
+], async (req, res) => {
+    const { title, page = 1, limit = 10, url } = req.query;
+    const cacheKey = `images_${req.user.id}_${title}_${page}_${limit}_${url}`;
 
     // Verifica se há cache para a requisição
     const cachedData = cache.get(cacheKey);
@@ -60,6 +63,10 @@ router.get('/', authMiddleware, async (req, res) => {
 
         if (title) {
             filter.title = { $regex: title, $options: 'i' };
+        }
+
+        if (url) {
+            filter.url = { $regex: url, $options: 'i' };
         }
 
         // Contar o total de imagens que correspondem ao filtro
