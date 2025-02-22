@@ -72,7 +72,7 @@ router.post('/login',
     });
 
 // Rota para renovar o access token
-router.post('/refresh-token',
+router.post('/token',
     async (req, res) => {
         const { refreshToken } = req.body;
 

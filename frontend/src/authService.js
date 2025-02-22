@@ -36,7 +36,7 @@ export const refreshAccessToken = async () => {
     }
 
     try {
-        const response = await api.post('/api/auth/refresh-token', { refreshToken });
+        const response = await api.post('/api/auth/token', { refreshToken });
         const { accessToken, refreshToken: newRefreshToken } = response.data;
         saveTokens(accessToken, newRefreshToken); // Salvar novo access token
         return accessToken
